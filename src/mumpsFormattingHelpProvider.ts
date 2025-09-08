@@ -3,7 +3,11 @@ export default class MumpsFormattingHelpProvider {
 	/*eslint class-methods-use-this: 0*/
 	provideDocumentFormattingEdits(document: vscode.TextDocument) {
 		const textEdits: vscode.TextEdit[] = []
-		for (let i = 0; i < document.lineCount; i++) {
+		let numLines = document.lineCount;
+		if (document.lineAt(numLines-1).text === ""){
+			numLines = numLines - 1
+		}
+		for (let i = 0; i < numLines; i++) {
 			const line = document.lineAt(i).text;
 			formatDocumentLine(line, i, textEdits);
 		}
@@ -11,7 +15,15 @@ export default class MumpsFormattingHelpProvider {
 	}
 	provideDocumentRangeFormattingEdits(document: vscode.TextDocument, range: vscode.Range) {
 		const textEdits: vscode.TextEdit[] = []
-		for (let i = range.start.line; i <= range.end.line; i++) {
+		let numLines = document.lineCount;
+		if (document.lineAt(numLines-1).text === ""){
+			numLines = numLines - 1
+		}
+		let extraLines = 0;
+		if (range.end.line >= numLines){
+			extraLines = range.end.line-numLines
+		}
+		for (let i = range.start.line; i <= range.end.line - extraLines; i++) {
 			const line = document.lineAt(i).text;
 			formatDocumentLine(line, i, textEdits);
 		}
@@ -23,7 +35,7 @@ function formatDocumentLine(line: string, lineNumber: number, textEdits) {
 	if (emptyLine.length === 0) {
 		textEdits.push(vscode.TextEdit.insert(new vscode.Position(lineNumber, 0), "\t;"))
 	}
-	if (line.endsWith(". ") || line.endsWith(".")) {
+	if ((line.endsWith(". ") || line.endsWith(".")) && !(line.includes(";"))) {
 		textEdits.push(vscode.TextEdit.insert(new vscode.Position(lineNumber, line.length), ";"))
 	}
 	if (line.startsWith(" ")) {
